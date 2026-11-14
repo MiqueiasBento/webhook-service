@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres-ws
+    environment:
+      POSTGRES_DB: webhook_service
+      POSTGRES_USER: webhook
+      POSTGRES_PASSWORD: webhook
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webhook -d webhook_service"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
