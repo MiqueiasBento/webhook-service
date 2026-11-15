@@ -8,13 +8,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.miqueiasbento.io.webhook_service.destination.dto.DestinationRequest;
 
-@Service
-public class DestinationService {
-    private final DestinationRepository repository;
+import lombok.RequiredArgsConstructor;
 
-    public DestinationService(DestinationRepository repository) {
-        this.repository = repository;
-    }
+@Service
+@RequiredArgsConstructor 
+public class DestinationService {
+
+    private final DestinationRepository repository;
 
     @Transactional
     public Destination create(DestinationRequest request) {

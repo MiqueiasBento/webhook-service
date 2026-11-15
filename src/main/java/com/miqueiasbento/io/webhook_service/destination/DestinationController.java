@@ -4,19 +4,19 @@ import java.net.URI;
 import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.miqueiasbento.io.webhook_service.destination.dto.DestinationRequest;
 
 @RestController
+@RequiredArgsConstructor 
 @RequestMapping("/api/v1/destinations")
 public class DestinationController {
-    private final DestinationService service;
 
-    public DestinationController(DestinationService service) {
-        this.service = service;
-    }
+    private final DestinationService service;
 
     @PostMapping
     public ResponseEntity<Destination> create(@Valid @RequestBody DestinationRequest request) {

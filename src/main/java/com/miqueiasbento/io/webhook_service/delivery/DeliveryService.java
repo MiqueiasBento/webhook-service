@@ -9,20 +9,20 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import com.miqueiasbento.io.webhook_service.destination.Destination;
 import com.miqueiasbento.io.webhook_service.destination.DestinationService;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor 
 public class DeliveryService {
+    
     private final DestinationService destinations;
     private final DeliveryRepository repository;
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-
-    public DeliveryService(DestinationService destinations, DeliveryRepository repository) {
-        this.destinations = destinations;
-        this.repository = repository;
-    }
 
     public Delivery deliver(EventRequest event) {
         Destination destination = destinations.get(event.destinationId());
