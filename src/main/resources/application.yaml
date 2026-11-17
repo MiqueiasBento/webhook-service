@@ -10,3 +10,12 @@ spring:
       ddl-auto: update
     open-in-view: false
     show-sql: false
+
+webhook:
+  http:
+    connect-timeout: 5s
+    request-timeout: 10s
+  retry:
+    max-attempts: 3
+    initial-wait: 1s
+    multiplier: 2

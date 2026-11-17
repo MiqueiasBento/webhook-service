@@ -2,7 +2,7 @@
 
 **Trabalho Prático 2 de Reuso de Software**
 
-Serviço Spring Boot em Java 25 para entrega reutilizável de webhooks. A API cadastra destinos e envia eventos por HTTP POST de forma síncrona, com uma tentativa por evento.
+Serviço Spring Boot em Java 25 para entrega reutilizável de webhooks. A API cadastra destinos e envia eventos por HTTP POST de forma síncrona, com até três tentativas para falhas temporárias.
 
 ## Executar localmente
 
@@ -28,6 +28,7 @@ As credenciais locais padrão são `webhook`/`webhook`, para desenvolvimento. Su
 - `GET /api/v1/destinations` lista destinos; `GET /api/v1/destinations/{id}` consulta um.
 - `PUT /api/v1/destinations/{id}` atualiza nome e URL.
 - `PATCH /api/v1/destinations/{id}/status` recebe `{"active":false}` para desativar ou `true` para reativar.
-- `POST /api/v1/events` recebe `destinationId`, `eventType` e `payload` JSON; devolve `id`, `status`, `attemptCount` e `responseStatus` da entrega.
+- `POST /api/v1/events` recebe `destinationId`, `eventType` e `payload` JSON; devolve `deliveryId`, `status`, `attemptCount`, `responseStatus` e `errorMessage`.
+- `GET /api/v1/deliveries/{id}` consulta o resultado persistido da entrega.
 
-Exemplo de evento: `{"destinationId":1,"eventType":"order.created","payload":{"orderId":7}}`. Apenas destinos ativos recebem eventos. Uma resposta HTTP 2xx do destinatário marca a entrega como `DELIVERED`; outras respostas ou falhas de conexão resultam em `FAILED`. Ainda não há Retry, consulta de entregas ou autenticação.
+Exemplo de evento: `{"destinationId":1,"eventType":"order.created","payload":{"orderId":7}}`. Apenas destinos ativos recebem eventos. Uma resposta HTTP 2xx do destinatário marca a entrega como `DELIVERED`. HTTP 408, 429, 5xx e falhas de comunicação são repetidos até três tentativas, com esperas de 1 e 2 segundos. Outros erros HTTP terminam como `FAILED` sem repetição. A resposta da API é HTTP 200 com o resultado da entrega no corpo. Ainda não há autenticação ou deduplicação de eventos; veja `docs/fluxo-de-entrega-e-retry.md`.

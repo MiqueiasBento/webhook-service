@@ -49,10 +49,14 @@ class WebhookApiTests {
                     .content(mapper.writeValueAsString(java.util.Map.of("name", "Updated", "url", url))))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Updated"));
 
-            mvc.perform(post("/api/v1/events").contentType(MediaType.APPLICATION_JSON)
+            String delivered = mvc.perform(post("/api/v1/events").contentType(MediaType.APPLICATION_JSON)
                     .content("{\"destinationId\":" + id + ",\"eventType\":\"order.created\",\"payload\":{\"orderId\":7}}"))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("DELIVERED"))
-                    .andExpect(jsonPath("$.attemptCount").value(1));
+                    .andExpect(jsonPath("$.attemptCount").value(1))
+                    .andReturn().getResponse().getContentAsString();
+            long deliveryId = mapper.readTree(delivered).get("deliveryId").asLong();
+            mvc.perform(get("/api/v1/deliveries/" + deliveryId)).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("DELIVERED"));
             assertThat(received.get()).contains("\"orderId\":7");
 
             mvc.perform(patch("/api/v1/destinations/" + id + "/status")
