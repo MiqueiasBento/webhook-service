@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 import com.sun.net.httpserver.HttpServer;
+import com.miqueiasbento.io.webhook_service.delivery.DeliveryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +22,41 @@ import tools.jackson.databind.ObjectMapper;
 class WebhookApiTests {
     @Autowired WebApplicationContext context;
     @Autowired ObjectMapper mapper;
+    @Autowired DeliveryRepository deliveries;
+
+    @Test
+    void returnsClientErrorsWithoutCreatingDeliveries() throws Exception {
+        MockMvc mvc = MockMvcBuilders.webAppContextSetup(context).build();
+        long before = deliveries.count();
+
+        mvc.perform(post("/api/v1/destinations").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Invalid\",\"url\":\"http://bad host\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400));
+        mvc.perform(post("/api/v1/events").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"destinationId\":1,\"eventType\":\"test\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("payload"));
+        mvc.perform(post("/api/v1/events").contentType(MediaType.APPLICATION_JSON)
+                .content("{"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("body"));
+        mvc.perform(post("/api/v1/events").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"destinationId\":9223372036854775807,\"eventType\":\"test\",\"payload\":{}}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/deliveries/9223372036854775807"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Delivery not found"));
+        mvc.perform(get("/api/v1/destinations/not-a-number"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/unknown"))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/destinations/123"))
+                .andExpect(status().isMethodNotAllowed());
+        mvc.perform(post("/api/v1/events").contentType(MediaType.TEXT_PLAIN).content("event"))
+                .andExpect(status().isUnsupportedMediaType());
+        assertThat(deliveries.count()).isEqualTo(before);
+    }
 
     @Test
     void managesDestinationAndDeliversEventOnce() throws Exception {

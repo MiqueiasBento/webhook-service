@@ -130,7 +130,14 @@ class DeliveryRetryTests {
             assertThat(stored.getStatus()).isEqualTo(expected);
             assertThat(stored.getAttemptCount()).isEqualTo(attempts);
             assertThat(stored.getResponseStatus()).isEqualTo(responseStatus);
+            assertThat(stored.getResponseBody()).isEqualTo("response-" + (attempts - 1));
+            assertThat(stored.getCreatedAt()).isNotNull();
             assertThat(stored.getCompletedAt()).isNotNull();
+            if (expected == DeliveryStatus.DELIVERED) {
+                assertThat(stored.getErrorMessage()).isNull();
+            } else {
+                assertThat(stored.getErrorMessage()).contains("HTTP " + responseStatus);
+            }
             assertThat(calls.get()).isEqualTo(attempts);
         } finally {
             receiver.stop(0);

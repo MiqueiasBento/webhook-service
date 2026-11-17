@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.miqueiasbento.io.webhook_service.destination.Destination;
 import com.miqueiasbento.io.webhook_service.destination.DestinationService;
+import com.miqueiasbento.io.webhook_service.exception.ResourceNotFoundException;
+
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -94,7 +96,7 @@ public class DeliveryService {
 
     public Delivery get(Long id) {
         return repository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Delivery not found"));
+                new ResourceNotFoundException("Delivery not found", "id"));
     }
 
     private static boolean isTemporary(int status) {
