@@ -90,6 +90,58 @@ class DeliveryRetryTests {
     }
 
     @Test
+    void rejectsOversizedDestinationResponseWithoutRetry() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        HttpServer receiver = server();
+        receiver.createContext("/hook", exchange -> {
+            calls.incrementAndGet();
+            byte[] body = new byte[65537];
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        receiver.start();
+        try {
+            Delivery result = service.deliver(event(destination(receiver), "large-response"));
+            Delivery stored = deliveries.findById(result.getId()).orElseThrow();
+            assertThat(stored.getStatus()).isEqualTo(DeliveryStatus.FAILED);
+            assertThat(stored.getAttemptCount()).isEqualTo(1);
+            assertThat(stored.getResponseStatus()).isEqualTo(200);
+            assertThat(stored.getResponseBody()).isNull();
+            assertThat(stored.getErrorMessage()).contains("size limit");
+            assertThat(calls.get()).isEqualTo(1);
+        } finally {
+            receiver.stop(0);
+        }
+    }
+
+    @Test
+    void doesNotFollowRedirects() throws Exception {
+        AtomicInteger redirectedCalls = new AtomicInteger();
+        HttpServer receiver = server();
+        receiver.createContext("/hook", exchange -> {
+            exchange.getResponseHeaders().add("Location", "/internal");
+            exchange.sendResponseHeaders(302, -1);
+            exchange.close();
+        });
+        receiver.createContext("/internal", exchange -> {
+            redirectedCalls.incrementAndGet();
+            exchange.sendResponseHeaders(200, -1);
+            exchange.close();
+        });
+        receiver.start();
+        try {
+            Delivery result = service.deliver(event(destination(receiver), "redirect"));
+            assertThat(result.getStatus()).isEqualTo(DeliveryStatus.FAILED);
+            assertThat(result.getResponseStatus()).isEqualTo(302);
+            assertThat(result.getAttemptCount()).isEqualTo(1);
+            assertThat(redirectedCalls.get()).isZero();
+        } finally {
+            receiver.stop(0);
+        }
+    }
+
+    @Test
     void rejectsInactiveAndMissingDestinations() throws Exception {
         Destination inactive = destinations.save(new Destination("Inactive", "http://127.0.0.1:1/hook"));
         inactive.setActive(false);

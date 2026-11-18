@@ -31,8 +31,9 @@ O perfil padrão (`docker compose up -d --wait`) inicia somente o banco, para de
 | `SPRING_DATASOURCE_USERNAME` | `webhook` | Usuário do banco |
 | `SPRING_DATASOURCE_PASSWORD` | `webhook` | Senha do banco |
 | `API_KEY` | sem padrão | Chave exigida em `X-API-Key` para rotas de negócio |
+| `WEBHOOK_ALLOW_PRIVATE_DESTINATIONS` | `false` | Permite destinos locais ou privados apenas em testes e demonstrações confiáveis |
 
-`application.yaml` define três tentativas de entrega, esperas de 1 e 2 segundos, timeout de conexão de 5 segundos e timeout por requisição de 10 segundos. O Compose configura a URL JDBC interna para `postgres:5432` quando a aplicação roda no container.
+`application.yaml` define três tentativas de entrega, esperas de 1 e 2 segundos, timeout de conexão de 5 segundos e timeout por requisição de 10 segundos. O corpo de `POST /api/v1/events` tem limite de 1 MB; a resposta do destino, 64 KB. O Compose configura a URL JDBC interna para `postgres:5432` quando a aplicação roda no container.
 
 A documentação OpenAPI fica em `http://localhost:8080/v3/api-docs` e a interface Swagger em `http://localhost:8080/swagger-ui/index.html`.
 
@@ -55,6 +56,6 @@ Requisições inválidas retornam `400`, recursos ausentes retornam `404` e dest
 
 ## Demonstração e documentos
 
-Com a aplicação local em execução, abra um terminal para `python3 demo/receiver.py` e outro para `bash demo/demo.sh`. O primeiro evento representa vendas e tem sucesso imediato; o segundo representa agendamentos e recebe duas respostas `500` antes do sucesso. O script mostra o mesmo serviço reutilizado sem mudanças no código. Detalhes estão em [arquitetura](docs/arquitetura.md), [roteiro de demonstração](docs/demonstracao.md), [relatório técnico](docs/relatorio-tecnico.pdf) e [apresentação](docs/apresentacao.pdf).
+Para a demonstração local, inicie a aplicação com `WEBHOOK_ALLOW_PRIVATE_DESTINATIONS=true ./mvnw spring-boot:run`. Em seguida, abra um terminal para `python3 demo/receiver.py` e outro para `bash demo/demo.sh`. O primeiro evento representa vendas e tem sucesso imediato; o segundo representa agendamentos e recebe duas respostas `500` antes do sucesso. O script mostra o mesmo serviço reutilizado sem mudanças no código. Detalhes estão em [arquitetura](docs/arquitetura.md), [roteiro de demonstração](docs/demonstracao.md), [relatório técnico](docs/relatorio-tecnico.pdf) e [apresentação](docs/apresentacao.pdf).
 
 Os arquivos Markdown são as fontes editáveis dos PDFs. Para regenerá-los, instale `reportlab` em um ambiente Python e execute `python3 docs/gerar-pdfs.py`.

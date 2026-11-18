@@ -14,9 +14,13 @@ spring:
     import: optional:file:.env[.properties]
 
 webhook:
+  security:
+    allow-private-destinations: ${WEBHOOK_ALLOW_PRIVATE_DESTINATIONS:false}
   http:
     connect-timeout: 5s
     request-timeout: 10s
+    max-event-bytes: 1048576
+    max-response-bytes: 65536
 
   retry:
     max-attempts: 3

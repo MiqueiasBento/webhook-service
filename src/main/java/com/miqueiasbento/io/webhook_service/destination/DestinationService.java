@@ -15,9 +15,11 @@ import lombok.RequiredArgsConstructor;
 public class DestinationService {
 
     private final DestinationRepository repository;
+    private final DestinationUrlPolicy urlPolicy;
 
     @Transactional
     public Destination create(DestinationRequest request) {
+        urlPolicy.validate(request.url());
         return repository.save(new Destination(request.name(), request.url()));
     }
 
@@ -34,6 +36,7 @@ public class DestinationService {
 
     @Transactional
     public Destination update(Long id, DestinationRequest request) {
+        urlPolicy.validate(request.url());
         Destination destination = get(id);
         destination.setName(request.name());
         destination.setUrl(request.url());
