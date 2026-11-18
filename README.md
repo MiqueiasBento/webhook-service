@@ -9,6 +9,7 @@ Serviço Spring Boot em Java 25 para entrega reutilizável de webhooks. A API ca
 Requisitos: JDK 25 e Docker com Compose. Importe `pom.xml` na IDE como projeto Maven e selecione o JDK 25. Na raiz deste repositório:
 
 ```sh
+export API_KEY='substitua-por-uma-chave-secreta'
 docker compose up -d --wait
 ./mvnw test
 ./mvnw spring-boot:run
@@ -18,7 +19,7 @@ O PostgreSQL fica disponível em `localhost:5433`; a aplicação escuta na porta
 
 ## Execução completa no Docker
 
-Com Docker e Compose, sem instalar JDK localmente, execute `docker compose --profile full up -d --build --wait`. O perfil `full` compila e inicia a aplicação após o PostgreSQL ficar saudável. Acesse a API em `http://localhost:8080`. Use `docker compose --profile full logs -f app` para acompanhar a inicialização e `docker compose --profile full down` para parar os serviços. O volume do banco é preservado; `down -v` também remove os dados.
+Com Docker e Compose, sem instalar JDK localmente, defina `API_KEY` no ambiente e execute `docker compose --profile full up -d --build --wait`. O perfil `full` compila e inicia a aplicação após o PostgreSQL ficar saudável. Acesse a API em `http://localhost:8080`. Use `docker compose --profile full logs -f app` para acompanhar a inicialização e `docker compose --profile full down` para parar os serviços. O volume do banco é preservado; `down -v` também remove os dados.
 
 O perfil padrão (`docker compose up -d --wait`) inicia somente o banco, para desenvolvimento com Maven ou IDE. Não execute simultaneamente a aplicação local e o perfil `full` na mesma porta `8080`.
 
@@ -29,6 +30,7 @@ O perfil padrão (`docker compose up -d --wait`) inicia somente o banco, para de
 | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5433/webhook_service` | Conexão JDBC |
 | `SPRING_DATASOURCE_USERNAME` | `webhook` | Usuário do banco |
 | `SPRING_DATASOURCE_PASSWORD` | `webhook` | Senha do banco |
+| `API_KEY` | sem padrão | Chave exigida em `X-API-Key` para rotas de negócio |
 
 `application.yaml` define três tentativas de entrega, esperas de 1 e 2 segundos, timeout de conexão de 5 segundos e timeout por requisição de 10 segundos. O Compose configura a URL JDBC interna para `postgres:5432` quando a aplicação roda no container.
 
@@ -47,7 +49,7 @@ As credenciais locais padrão são `webhook`/`webhook`, para desenvolvimento. Su
 - `POST /api/v1/events` recebe `destinationId`, `eventType` e `payload` JSON; devolve `deliveryId`, `status`, `attemptCount`, `responseStatus` e `errorMessage`.
 - `GET /api/v1/deliveries/{id}` consulta o resultado persistido da entrega.
 
-Exemplo de evento: `{"destinationId":1,"eventType":"order.created","payload":{"orderId":7}}`. Apenas destinos ativos recebem eventos. Uma resposta HTTP 2xx do destinatário marca a entrega como `DELIVERED`. HTTP 408, 429, 5xx e falhas de comunicação são repetidos até três tentativas, com esperas de 1 e 2 segundos. Outros erros HTTP terminam como `FAILED` sem repetição. A resposta da API é HTTP 200 com o resultado da entrega no corpo. Ainda não há autenticação ou deduplicação de eventos.
+Exemplo de evento: `{"destinationId":1,"eventType":"order.created","payload":{"orderId":7}}`. Apenas destinos ativos recebem eventos. Uma resposta HTTP 2xx do destinatário marca a entrega como `DELIVERED`. HTTP 408, 429, 5xx e falhas de comunicação são repetidos até três tentativas, com esperas de 1 e 2 segundos. Outros erros HTTP terminam como `FAILED` sem repetição. A resposta da API é HTTP 200 com o resultado da entrega no corpo. As rotas de negócio exigem o cabeçalho `X-API-Key`; chave ausente ou inválida retorna `401`. Swagger e `/v3/api-docs` permanecem públicos. Ainda não há deduplicação de eventos.
 
 Requisições inválidas retornam `400`, recursos ausentes retornam `404` e destinos inativos retornam `409`. O corpo de erro contém `field`, `message`, `statusCode` e `error`. A entrega é gravada antes do envio com `PROCESSING` e zero tentativas; ao final, são persistidos status, tentativas realizadas, última resposta disponível, erro e horário de conclusão. O Retry envolve apenas a comunicação HTTP; as gravações no banco ocorrem fora dessa espera.
 

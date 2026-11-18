@@ -12,7 +12,7 @@ Produtor -> EventController -> DeliveryService -> WebhookHttpClient -> Destinat�
                                                 PostgreSQL
 ```
 
-`DestinationController` e `DestinationService` gerenciam nome, URL e ativação. `EventController` recebe eventos e consulta resultados. `DeliveryService` coordena validação do destino, persistência e Retry. `WebhookHttpClient` conhece apenas HTTP. Spring Data JPA acessa o PostgreSQL. SpringDoc gera OpenAPI e Swagger UI; Bean Validation verifica entradas; Lombok reduz código repetitivo nas entidades.
+`DestinationController` e `DestinationService` gerenciam nome, URL e ativação. `EventController` recebe eventos e consulta resultados. `DeliveryService` coordena validação do destino, persistência e Retry. `WebhookHttpClient` conhece apenas HTTP. Spring Data JPA acessa o PostgreSQL. SpringDoc gera OpenAPI e Swagger UI; Bean Validation verifica entradas; Lombok reduz código repetitivo nas entidades. Um filtro valida `X-API-Key` nas rotas de negócio; a chave é fornecida por `API_KEY`.
 
 ## Sequência de entrega
 
@@ -42,4 +42,4 @@ O padrão aplicado é **Retry**, implementado com `resilience4j-retry:2.4.0` por
 
 ## Limites e evolução
 
-O Retry fornece semântica de entrega **pelo menos uma vez**. Se o destinatário processar o evento e perder a resposta, poderá receber o mesmo payload novamente. A API ainda não fornece chave de idempotência ou deduplicação. Também não há autenticação, fila, processamento assíncrono, migrações versionadas ou histórico individual por tentativa. O esquema é atualizado automaticamente pelo Hibernate apenas nesta configuração inicial; produção deve usar migrações e credenciais próprias.
+O Retry fornece semântica de entrega **pelo menos uma vez**. Se o destinatário processar o evento e perder a resposta, poderá receber o mesmo payload novamente. A API ainda não fornece chave de idempotência ou deduplicação. A autenticação atual usa uma chave compartilhada, sem identidade individual por produtor. Ainda não há fila, processamento assíncrono, migrações versionadas ou histórico individual por tentativa. O esquema é atualizado automaticamente pelo Hibernate apenas nesta configuração inicial; produção deve usar migrações e credenciais próprias.

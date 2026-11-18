@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import com.miqueiasbento.io.webhook_service.destination.dto.DestinationRequest;
 
 @RestController
+@SecurityRequirement(name = "apiKey")
 @RequiredArgsConstructor 
 @RequestMapping("/api/v1/destinations")
 public class DestinationController {

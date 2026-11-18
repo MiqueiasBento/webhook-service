@@ -19,7 +19,7 @@ Nota: Separação entre comunicação HTTP e persistência.
 - POST /api/v1/destinations cadastra um destinatário
 - POST /api/v1/events recebe destinationId, eventType e payload
 - GET /api/v1/deliveries/{id} consulta o resultado
-- Swagger UI: /swagger-ui/index.html
+- X-API-Key protege destinos, eventos e entregas; Swagger UI permanece público
 Nota: Abrir o Swagger e mostrar o formato do evento.
 
 # Persistência e resiliência
@@ -38,11 +38,11 @@ Nota: Executar python3 demo/receiver.py e bash demo/demo.sh em terminais separad
 # Verificação e limites
 - Testes JUnit exercitam API, banco real, timeout e políticas de Retry
 - Entrega pelo menos uma vez: duplicatas são possíveis
-- Ainda faltam autenticação, deduplicação, fila e migrações de produção
+- A chave é compartilhada; faltam deduplicação, fila e migrações de produção
 
 # Conclusão
 - Reuso reduz código duplicado nos produtores
 - Contrato HTTP documentado facilita integração
 - Retry melhora disponibilidade diante de falhas temporárias
-- Próxima evolução: idempotência, segurança e operação assíncrona
+- Próxima evolução: idempotência, identidade por produtor e operação assíncrona
 Nota: Diferença entre HTTP 200 da API e status da entrega no corpo.

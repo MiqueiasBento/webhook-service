@@ -1,9 +1,11 @@
 package com.miqueiasbento.io.webhook_service.delivery;
 
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@SecurityRequirement(name = "apiKey")
 public class EventController {
     private final DeliveryService service;
 
